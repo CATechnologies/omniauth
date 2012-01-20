@@ -2,6 +2,11 @@ require 'rack/openid'
 require 'omniauth/openid/gapps'
 require 'omniauth/openid'
 
+# Require the AX extension
+require 'openid/message'
+require 'openid/extensions/ax'
+# Register the ax namespace
+
 module OmniAuth
   module Strategies
     # OmniAuth strategy for connecting via OpenID. This allows for connection
@@ -38,6 +43,10 @@ module OmniAuth
       def initialize(app, store = nil, options = {}, &block)
         super(app, (options[:name] || :open_id), &block)
         @options = options
+
+        ::OpenID::Message.register_namespace_alias(::OpenID::AX::AXMessage::NS_URI, 'ax')
+
+
         @options[:required] ||= [AX[:email], AX[:name], AX[:first_name], AX[:last_name], 'email', 'fullname']
         @options[:optional] ||= [AX[:nickname], AX[:city], AX[:state], AX[:website], AX[:image], 'postcode', 'nickname']
         @store = store
