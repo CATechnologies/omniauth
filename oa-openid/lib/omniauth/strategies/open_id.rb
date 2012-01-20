@@ -46,6 +46,11 @@ module OmniAuth
 
         ::OpenID::Message.register_namespace_alias(::OpenID::AX::AXMessage::NS_URI, 'ax')
 
+        if @options[:additional_ax_attributes]
+          @options[:additional_ax_attributes].each_pair do |attr, url|
+            AX[attr] = url
+          end
+        end
 
         @options[:required] ||= [AX[:email], AX[:name], AX[:first_name], AX[:last_name], 'email', 'fullname']
         @options[:optional] ||= [AX[:nickname], AX[:city], AX[:state], AX[:website], AX[:image], 'postcode', 'nickname']
