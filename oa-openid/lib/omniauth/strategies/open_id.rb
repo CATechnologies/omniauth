@@ -133,7 +133,7 @@ module OmniAuth
       def ax_user_info(response)
         ax = ::OpenID::AX::FetchResponse.from_success_response(response)
         return {} unless ax
-        {
+        user_info = {
           'email' => ax.get_single(AX[:email]),
           'first_name' => ax.get_single(AX[:first_name]),
           'last_name' => ax.get_single(AX[:last_name]),
@@ -142,6 +142,24 @@ module OmniAuth
           'nickname' => ax.get_single(AX[:nickname]),
           'urls' => ({'Website' => Array(ax.get_single(AX[:website])).first} if Array(ax.get_single(AX[:website])).any?)
         }.inject({}){|h,(k,v)| h[k] = Array(v).first; h}.reject{|k,v| v.nil? || v == ''}
+
+        additional_ax_attributes(user_info, ax)
+      end
+
+      # Returns a hash of any additional ax data returned by the response
+      def additional_ax_user_info(user_info, ax)
+        valid_ax_keys = AX.reject do |attr, url|
+          user_info.key?(attr.to_s)
+        end
+
+        additional_ax_attributes = valid_ax_keys.inject({}) do |h, (k,v)| 
+          h[k.to_s] = Array(v).first
+          h
+        end
+
+        additional_ax_attributes.reject do |k,v|
+          v.nil? || v == ''
+        end
       end
     end
   end
