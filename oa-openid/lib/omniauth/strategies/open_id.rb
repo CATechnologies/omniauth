@@ -143,7 +143,12 @@ module OmniAuth
           'urls' => ({'Website' => Array(ax.get_single(AX[:website])).first} if Array(ax.get_single(AX[:website])).any?)
         }.inject({}){|h,(k,v)| h[k] = Array(v).first; h}.reject{|k,v| v.nil? || v == ''}
 
-        additional_ax_attributes(user_info, ax)
+
+        if @options[:additional_ax_attributes]
+          additional_ax_attributes(user_info, ax)
+        else
+          user_info
+        end
       end
 
       # Returns a hash of any additional ax data returned by the response
