@@ -116,18 +116,25 @@ module OmniAuth
       end
 
       def user_info(response)
-        sreg_user_info(response).merge(ax_user_info(response))
+        user_info = sreg_user_info(response).merge(ax_user_info(response))
+        user_info
       end
 
       def sreg_user_info(response)
         sreg = ::OpenID::SReg::Response.from_success_response(response)
         return {} unless sreg
-        {
+        user_info = {
           'email' => sreg['email'],
           'name' => sreg['fullname'],
           'location' => sreg['postcode'],
           'nickname' => sreg['nickname']
         }.reject{|k,v| v.nil? || v == ''}
+
+        if @options[:additional_sreg_attributes]
+          user_info.merge(additional_sreg_user_info(user_info, sreg))
+        else
+          user_info
+        end
       end
 
       def ax_user_info(response)
@@ -145,7 +152,7 @@ module OmniAuth
 
 
         if @options[:additional_ax_attributes]
-          additional_ax_attributes(user_info, ax)
+          user_info.merge(additional_ax_user_info(user_info, ax))
         else
           user_info
         end
@@ -158,13 +165,30 @@ module OmniAuth
         end
 
         additional_ax_attributes = valid_ax_keys.inject({}) do |h, (k,v)| 
-          h[k.to_s] = Array(v).first
+          h[k.to_s] = Array(ax.get_single(v)).first
           h
         end
 
-        additional_ax_attributes.reject do |k,v|
+        additional_ax_attributes = additional_ax_attributes.reject do |k,v|
           v.nil? || v == ''
         end
+        additional_ax_attributes
+      end
+
+      def additional_sreg_user_info(user_info, sreg)
+        valid_sreg_keys = @options[:additional_sreg_attributes].reject do |attr|
+          user_info.key?(attr.to_s)
+        end
+
+        additional_sreg_attributes = valid_sreg_keys.inject({}) do |h, k| 
+          h[k.to_s] = Array(sreg[k.to_s]).first
+          h
+        end
+
+        additional_sreg_attributes = additional_sreg_attributes.reject do |k,v|
+          v.nil? || v == ''
+        end
+        additional_sreg_attributes
       end
     end
   end
