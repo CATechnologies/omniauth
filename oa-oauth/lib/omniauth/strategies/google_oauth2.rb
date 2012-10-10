@@ -37,21 +37,21 @@ module OmniAuth
       end
 
       def user_info
-        if user_data['data']['isVerified']
-          email = user_data['data']['email']
-        else
-          email = nil
-        end
+        data = user_data
+        user_data['email'].delete unless user_data['verified_email']
         {
-          'email' => email,
-          'uid' => email,
-          'name' => email
+          'email' => user_data['verified_email'] ? user_data['email'] : nil,
+          'uid' => user_data['id'],
+          'name' => user_data['name'],
+          'first_name' => user_data['given_name'],
+          'last_name' => user_data['family_name'],
+          'image' => user_data['picture'],
+          'locale' => user_data['locale']
         }
       end
 
       def user_data
-        @data ||=
-          @access_token.get("https://www.googleapis.com/userinfo/email?alt=json").parsed
+        @data ||= @access_token.get("https://www.googleapis.com/oauth2/v2/userinfo").parsed
       end
 
     end
